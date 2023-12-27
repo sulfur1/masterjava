@@ -1,8 +1,9 @@
 package ru.javaops.masterjava.matrix;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
 /**
  * gkislin
@@ -10,12 +11,38 @@ import java.util.concurrent.ExecutorService;
  */
 public class MatrixUtil {
 
-    // TODO implement parallel multiplication matrixA*matrixB
-    public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) throws InterruptedException, ExecutionException {
+    public static int[][] concurrentMultiply(int[][] matrixA, int[][] matrixB, ExecutorService executor) {
         final int matrixSize = matrixA.length;
         final int[][] matrixC = new int[matrixSize][matrixSize];
+        CompletionService<int[][]> completionService = new ExecutorCompletionService<>(executor);
+        int taskSize = 5;
+        final int divMatrixSize = matrixSize / taskSize;
+        List<Future<int[][]>> futures = new ArrayList<>();
+        for (int i = 0; i < matrixSize; i += divMatrixSize) {
+            final int to = i == (matrixSize / taskSize) * (taskSize - 1) ? matrixSize : i + divMatrixSize;
+            futures.add(completionService.submit(getCall(matrixA, matrixB, i, to, matrixC)));
+        }
+        while (!futures.isEmpty()) {
+            Future<int[][]> matrix = completionService.poll();
+            if (matrix != null) futures.remove(matrix);
+        }
 
         return matrixC;
+    }
+
+    private static Callable<int[][]> getCall(int[][] matrixA, int[][] matrixB, int of, int to, int[][] matrixC) {
+        return () -> {
+            for (int i = of; i < to; i++) {
+                for (int j = 0; j < matrixA.length; j++) {
+                    int sum = 0;
+                    for (int k = 0; k < matrixA.length; k++) {
+                        sum += matrixA[i][k] * matrixB[k][j];
+                    }
+                    matrixC[i][j] = sum;
+                }
+            }
+            return matrixC;
+        };
     }
 
     // TODO optimize by https://habrahabr.ru/post/114797/
