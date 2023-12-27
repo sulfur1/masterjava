@@ -52,7 +52,7 @@ public class MatrixUtil {
         };
     }
 
-    // TODO optimize by https://habrahabr.ru/post/114797/
+
     public static int[][] singleThreadMultiply(int[][] matrixA, int[][] matrixB) {
        /* final int[][] matrixBT = new int[matrixB.length][matrixB.length];
         final int matrixBTSize = matrixBT.length;
