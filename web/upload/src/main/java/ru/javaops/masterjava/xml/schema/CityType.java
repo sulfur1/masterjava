@@ -1,5 +1,3 @@
-
-
 package ru.javaops.masterjava.xml.schema;
 
 import javax.xml.bind.annotation.*;
