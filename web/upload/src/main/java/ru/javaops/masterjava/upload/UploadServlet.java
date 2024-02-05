@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.WebContext;
 import ru.javaops.masterjava.persist.model.User;
 
-import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,7 +18,7 @@ import java.util.List;
 
 import static ru.javaops.masterjava.common.web.ThymeleafListener.engine;
 
-@WebServlet(urlPatterns = "/upload", loadOnStartup = 1)
+@WebServlet(urlPatterns = "/", loadOnStartup = 1)
 @MultipartConfig(fileSizeThreshold = 1024 * 1024 * 10) //10 MB in memory limit
 public class UploadServlet extends HttpServlet {
     private static final Logger log = LoggerFactory.getLogger(UploadServlet.class);
