@@ -1,7 +1,7 @@
 
 package ru.javaops.masterjava.xml.schema;
 
-import javax.xml.bind.annotation.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
