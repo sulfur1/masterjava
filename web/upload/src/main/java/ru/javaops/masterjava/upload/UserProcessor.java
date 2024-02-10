@@ -27,9 +27,9 @@ public class UserProcessor {
     private static final int NUMBER_THREADS = 4;
 
     private static final JaxbParser jaxbParser = new JaxbParser(ObjectFactory.class);
-    private static UserDao userDao = DBIProvider.getDao(UserDao.class);
+    private static final UserDao userDao = DBIProvider.getDao(UserDao.class);
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_THREADS);
+    private final ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_THREADS);
 
     public static class FailedEmails {
         public String emailsOrRange;
@@ -52,8 +52,7 @@ public class UserProcessor {
     public List<FailedEmails> process(final InputStream is, int chunkSize) throws XMLStreamException, JAXBException {
         log.info("Start processing with chunkSize=" + chunkSize);
 
-                Map<String, Future<List<String>>> chunkFutures = new LinkedHashMap<>();  // ordered map (emailRange -> chunk future)
-
+        Map<String, Future<List<String>>> chunkFutures = new LinkedHashMap<>();  // ordered map (emailRange -> chunk future)
 
         int id = userDao.getSeqAndSkip(chunkSize);
         List<User> chunk = new ArrayList<>(chunkSize);
@@ -74,28 +73,29 @@ public class UserProcessor {
         if (!chunk.isEmpty()) {
             addChunkFutures(chunkFutures, chunk);
         }
-            List<FailedEmails> failed = new ArrayList<>();
-            List<String> allAlreadyPresents = new ArrayList<>();
+        List<FailedEmails> failed = new ArrayList<>();
+        List<String> allAlreadyPresents = new ArrayList<>();
         chunkFutures.forEach((emailRange, future) -> {
-                try {
-                    List<String> alreadyPresentsInChunk = future.get();
-                    log.info("{} successfully executed with already presents: {}", emailRange, alreadyPresentsInChunk);
-                    allAlreadyPresents.addAll(alreadyPresentsInChunk);
-                } catch (InterruptedException | ExecutionException e) {
-                    log.error(emailRange + " failed", e);
-                    failed.add(new FailedEmails(emailRange, e.toString()));
-                }
-            });
-        if (!allAlreadyPresents.isEmpty()) {
-                failed.add(new FailedEmails(allAlreadyPresents.toString(), "already presents"));
+            try {
+                List<String> alreadyPresentsInChunk = future.get();
+                log.info("{} successfully executed with already presents: {}", emailRange, alreadyPresentsInChunk);
+                allAlreadyPresents.addAll(alreadyPresentsInChunk);
+            } catch (InterruptedException | ExecutionException e) {
+                log.error(emailRange + " failed", e);
+                failed.add(new FailedEmails(emailRange, e.toString()));
             }
-        return failed;
+        });
+        if (!allAlreadyPresents.isEmpty()) {
+            failed.add(new FailedEmails(allAlreadyPresents.toString(), "already presents"));
         }
+        return failed;
+    }
+
     private void addChunkFutures(Map<String, Future<List<String>>> chunkFutures, List<User> chunk) {
         String emailRange = String.format("[%s-%s]", chunk.get(0).getEmail(), chunk.get(chunk.size() - 1).getEmail());
         Future<List<String>> future = executorService.submit(() -> userDao.insertAndGetConflictEmails(chunk));
         chunkFutures.put(emailRange, future);
         log.info("Submit chunk: " + emailRange);
-            log.info("Submit chunk: " + emailRange);
-        }
+        log.info("Submit chunk: " + emailRange);
+    }
 }
