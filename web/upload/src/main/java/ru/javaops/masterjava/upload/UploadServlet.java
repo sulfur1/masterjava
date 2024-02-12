@@ -23,7 +23,7 @@ public class UploadServlet extends HttpServlet {
     private static final int CHUNK_SIZE = 2000;
 
     private final UserProcessor userProcessor = new UserProcessor();
-
+    private final CityProcessor cityProcessor = new CityProcessor();
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         out(req, resp, "", CHUNK_SIZE);
@@ -42,6 +42,7 @@ public class UploadServlet extends HttpServlet {
                 Part filePart = req.getPart("fileToUpload");
                 try (InputStream is = filePart.getInputStream()) {
                     List<UserProcessor.FailedEmails> failed = userProcessor.process(is, chunkSize);
+                    cityProcessor.process(is);
                     log.info("Failed users: " + failed);
                     final WebContext webContext =
                             new WebContext(req, resp, req.getServletContext(), req.getLocale(),
