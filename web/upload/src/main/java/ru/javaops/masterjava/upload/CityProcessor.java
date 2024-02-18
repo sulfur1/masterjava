@@ -31,7 +31,6 @@ public class CityProcessor {
 
     public void process(final InputStream is) throws XMLStreamException, JAXBException, IOException {
         log.info("Start processing parse cities");
-        is.reset();
         StaxStreamProcessor staxStreamProcessor = new StaxStreamProcessor(is);
         JaxbUnmarshaller unmarshaller = JAXB_PARSER.createUnmarshaller();
         List<Future<City>> futuresCity = new ArrayList<>();
